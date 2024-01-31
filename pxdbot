@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+from PyXDBot.xdownloader import PyXDownloader
+
+
+if __name__ == "__main__":
+    PXD = PyXDownloader()
+    PXD.start_polling()
