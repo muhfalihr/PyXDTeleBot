@@ -24,10 +24,11 @@ PyXDTeleBot is an effective and efficient solution for those who want to quickly
 
 - **Python**
 
-  Already installed Python with version 3.10.12. See the [Installation and Setting up Python](https://github.com/muhfalihr/mystorage/blob/master/md/PY.md).
+  Already installed Python with version 3.10.12. See the [Installation and Setting up Python](https://github.com/muhfalihr/PyXDTeleBot/tree/master?tab=readme-ov-file#installation-of-python-31012).
 
 - **Telebot (Telegram Bot)**
-  Already have a telegram bot. If you don't have one, you can follow the [steps for creating a Telegram Bot]().
+
+  Already have a telegram bot. If you don't have one, you can follow the [steps for creating a Telegram Bot](https://github.com/muhfalihr/PyXDTeleBot/tree/master?tab=readme-ov-file#create-a-telegram-bot).
 
 - **Crontab**
 
@@ -93,7 +94,7 @@ cd PyXDTeleBot/
    COOKIE_STR='YOUR-TWITTER-COOKIE'
    ```
 
-3. [Create and run Crontab]().
+3. [Create and run Crontab](https://github.com/muhfalihr/PyXDTeleBot/tree/master?tab=readme-ov-file#create-crontab).
 
 ## Create a Telegram Bot
 
@@ -117,7 +118,7 @@ cd PyXDTeleBot/
 
 - For more details, see the [freeCodeCamp website](https://www.freecodecamp.org/news/how-to-create-a-telegram-bot-using-python/).
 
-## Createc Crontab
+## Create Crontab
 
 - Check Crontab Contents
 
