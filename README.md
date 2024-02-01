@@ -95,7 +95,7 @@ cd PyXDTeleBot/
 
    ```.env
    TELEBOT_TOKEN=YOUR-TOKEN-TELEBOT
-   COOKIE_STR='YOUR-TWITTER-COOKIE'
+   X_COOKIE='YOUR-TWITTER-COOKIE'
    ```
 
 3. [Create and run Crontab](https://github.com/muhfalihr/PyXDTeleBot/tree/master?tab=readme-ov-file#create-crontab).

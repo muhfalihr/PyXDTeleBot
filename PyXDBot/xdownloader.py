@@ -8,6 +8,7 @@ import inspect
 import hashlib
 
 from requests.sessions import Session
+from telebot import types
 from urllib.parse import quote
 from PyXDBot.exception import *
 from PyXDBot.logger import setup_logging
@@ -16,14 +17,14 @@ from typing import Any, Optional
 from dotenv import load_dotenv
 
 
-class PyXDownloader:
+class PyXDTelebot:
     def __init__(self) -> Any:
         load_dotenv()
 
         TOKEN = os.environ.get("TELEBOT_TOKEN")
         self.__bot = telebot.TeleBot(token=TOKEN)
 
-        self.__cookie = os.environ.get("COOKIE_STR")
+        self.__cookie = os.environ.get("X_COOKIE")
         self.__session = Session()
         self.__fake = Faker()
 
@@ -70,7 +71,7 @@ class PyXDownloader:
             )
 
         @self.__bot.message_handler(commands=["allmedia", "am"])
-        def send_allmedias(message):
+        def send_allmedia(message):
             id = message.chat.id
             parameters = dict()
 
@@ -86,16 +87,38 @@ class PyXDownloader:
                 )
                 medias, cursor_value = self.allmedia(**parameters)
 
+                media_group = []
+
                 for media in medias:
                     data, filename, content_type = self.__download(media)
 
                     databyte = io.BytesIO(data)
                     databyte.name = filename
 
-                    if "image" in content_type:
-                        self.__bot.send_photo(chat_id=id, photo=databyte)
-                    elif "video" in content_type:
-                        self.__bot.send_video(chat_id=id, video=databyte)
+                    if len(media_group) == 10:
+                        media_group.clear()
+
+                    if len(media_group) < 10:
+                        if "image" in content_type:
+                            media_group.append(
+                                types.InputMediaPhoto(media=databyte)
+                            )
+                        elif "video" in content_type:
+                            media_group.append(
+                                types.InputMediaVideo(media=databyte)
+                            )
+
+                    if len(media_group) == 10:
+                        self.__bot.send_media_group(
+                            chat_id=id,
+                            media=media_group
+                        )
+
+                if media_group:
+                    self.__bot.send_media_group(
+                        chat_id=id,
+                        media=media_group
+                    )
 
                 self.__bot.send_message(
                     chat_id=id, text=f"Cursor Value for next media = {cursor_value}")
@@ -133,13 +156,27 @@ class PyXDownloader:
                 )
                 medias, cursor_value = self.images(**parameters)
 
+                media_group = []
+
                 for media in medias:
                     data, filename, content_type = self.__download(media)
 
                     databyte = io.BytesIO(data)
                     databyte.name = filename
 
-                    self.__bot.send_photo(chat_id=id, photo=databyte)
+                    if len(media_group) == 10:
+                        media_group.clear()
+
+                    if len(media_group) < 10:
+                        media_group.append(
+                            types.InputMediaPhoto(media=databyte)
+                        )
+
+                    if len(media_group) == 10:
+                        self.__bot.send_media_group(
+                            chat_id=id,
+                            media=media_group
+                        )
 
                 self.__bot.send_message(
                     chat_id=id, text=f"Cursor Value for next media = {cursor_value}")
@@ -177,19 +214,38 @@ class PyXDownloader:
                     )
                     medias = self.linkdownloader(param)
 
+                    media_group = []
+
                     for media in medias:
                         data, filename, content_type = self.__download(media)
 
                         databyte = io.BytesIO(data)
                         databyte.name = filename
 
-                        if "image" in content_type:
-                            self.__bot.send_photo(chat_id=id, photo=databyte)
-                        elif "video" in content_type:
-                            self.__bot.send_video(chat_id=id, video=databyte)
-                        else:
-                            self.__bot.send_document(
-                                chat_id=id, document=databyte)
+                        if len(media_group) == 10:
+                            media_group.clear()
+
+                        if len(media_group) < 10:
+                            if "image" in content_type:
+                                media_group.append(
+                                    types.InputMediaPhoto(media=databyte)
+                                )
+                            elif "video" in content_type:
+                                media_group.append(
+                                    types.InputMediaVideo(media=databyte)
+                                )
+
+                        if len(media_group) == 10:
+                            self.__bot.send_media_group(
+                                chat_id=id,
+                                media=media_group
+                            )
+
+                    if media_group:
+                        self.__bot.send_media_group(
+                            chat_id=id,
+                            media=media_group
+                        )
 
                     self.__bot.send_message(
                         chat_id=id, text="Media download is complete.")
@@ -420,7 +476,7 @@ class PyXDownloader:
 
     def __download(self, url: str) -> Any:
         self.__logger.info(
-            f"Carry out the process to retrieve content, filename, and content_type in the {self.__current_func} function."
+            f"Carry out the process to retrieve content, filename, and content_type in the {self.__current_func()} function."
         )
 
         user_agent = self.__fake.user_agent()
@@ -467,7 +523,7 @@ class PyXDownloader:
 
     def __processmedia(self, tweet_results: dict, func_name: str) -> list:
         self.__logger.info(
-            f"Carry out the process of retrieving URLs from each media in the {self.__current_func} function."
+            f"Carry out the process of retrieving URLs from each media in the {self.__current_func()} function."
         )
 
         medias = []
@@ -675,7 +731,7 @@ class PyXDownloader:
         self.__headers["X-Csrf-Token"] = self.__csrftoken()
 
         self.__logger.info(
-            "Make a request to the URL UserMedia Twitter using the GET method."
+            "Make a request to the URL Images Twitter using the GET method."
         )
 
         resp = self.__session.request(
@@ -878,4 +934,4 @@ class PyXDownloader:
 
 
 if __name__ == "__main__":
-    sb = PyXDownloader()
+    sb = PyXDTelebot()
