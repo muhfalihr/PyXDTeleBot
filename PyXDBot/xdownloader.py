@@ -873,6 +873,7 @@ class PyXDownloader:
         return medias
 
     def start_polling(self):
+        self.__logger.info("Starting the PyXDTelebot program has gone well.")
         self.__bot.polling(non_stop=True)
 
 
