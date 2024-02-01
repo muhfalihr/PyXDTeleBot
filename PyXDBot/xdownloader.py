@@ -178,6 +178,12 @@ class PyXDTelebot:
                             media=media_group
                         )
 
+                if media_group:
+                    self.__bot.send_media_group(
+                            chat_id=id,
+                            media=media_group
+                        )
+
                 self.__bot.send_message(
                     chat_id=id, text=f"Cursor Value for next media = {cursor_value}")
             else:
@@ -490,7 +496,7 @@ class PyXDTelebot:
             method="GET",
             url=url,
             headers=self.__headers,
-            timeout=60
+            timeout=120
         )
         status_code = resp.status_code
         data = resp.content
