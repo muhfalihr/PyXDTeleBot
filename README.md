@@ -168,7 +168,7 @@ cd PyXDTeleBot/
     Usage example for running a Python script:
 
     ```
-    * * * * * /path/to/PyRayCrawler/prc
+    * * * * * /path/to/PyXDTeleBot/pxdbot
     ```
 
     This means that the `prc` script will be run every minute, every hour, every month, each month, and every day of the week.
