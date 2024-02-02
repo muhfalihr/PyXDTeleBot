@@ -40,6 +40,9 @@ class PyXDTelebot:
         self.__headers["Authorization"] = "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
         self.__headers["Cookie"] = self.__cookie
 
+        self.__http_error_status_code = None
+        self.__http_error_reason = None
+
         self.__current_func = lambda: inspect.getouterframes(
             inspect.currentframe()
         )[1][3]
@@ -81,148 +84,28 @@ class PyXDTelebot:
                     parameters.update({parameter[0]: parameter[1]})
 
             if parameters:
-                self.__bot.reply_to(
-                    message=message,
-                    text="Please wait...\nStill loading the media."
+                self.__bot.send_message(
+                    chat_id=id,
+                    text="Please Wait...."
                 )
-                medias, cursor_value = self.allmedia(**parameters)
 
-                media_group = []
-
-                for media in medias:
-                    data, filename, content_type = self.__download(media)
-
-                    databyte = io.BytesIO(data)
-                    databyte.name = filename
-
-                    if len(media_group) == 10:
-                        media_group.clear()
-
-                    if len(media_group) < 10:
-                        if "image" in content_type:
-                            media_group.append(
-                                types.InputMediaPhoto(media=databyte)
-                            )
-                        elif "video" in content_type:
-                            media_group.append(
-                                types.InputMediaVideo(media=databyte)
-                            )
-
-                    if len(media_group) == 10:
-                        self.__bot.send_media_group(
-                            chat_id=id,
-                            media=media_group
-                        )
-
-                if media_group:
-                    self.__bot.send_media_group(
+                try:
+                    send_msg = self.__bot.send_message(
                         chat_id=id,
-                        media=media_group
+                        text="Loading"
                     )
 
-                self.__bot.send_message(
-                    chat_id=id, text=f"Cursor Value for next media = {cursor_value}")
-            else:
-                self.__bot.send_message(
-                    chat_id=id, text=f"Your command is not correct.")
-                self.__bot.send_message(
-                    chat_id=id,
-                    text=(
-                        "Instructions for use:\n"
-                        "  - /allmedia screen_name=screenname count=20 cursor=abcdefghij\n"
-                        "  - /images screen_name=screenname count=20 cursor=abcdefghij\n"
-                        "  - /linkdownloader https://x.com/screenname/status/postid?s=20\n\n"
-                        "Explanation:\n"
-                        "  - screen_name (Required)\n"
-                        "  - count (Optional) Default = 20\n"
-                        "  - cursor (Optional) Used to retrieve the next media.\n"
-                    )
-                )
-
-        @self.__bot.message_handler(commands=["images", "imgs"])
-        def send_images(message):
-            id = message.chat.id
-            parameters = dict()
-
-            for param in message.text.split():
-                if "=" in param:
-                    parameter = param.split("=")
-                    parameters.update({parameter[0]: parameter[1]})
-
-            if parameters:
-                self.__bot.reply_to(
-                    message=message,
-                    text="Please wait...\nStill loading the images."
-                )
-                medias, cursor_value = self.images(**parameters)
-
-                media_group = []
-
-                for media in medias:
-                    data, filename, content_type = self.__download(media)
-
-                    databyte = io.BytesIO(data)
-                    databyte.name = filename
-
-                    if len(media_group) == 10:
-                        media_group.clear()
-
-                    if len(media_group) < 10:
-                        media_group.append(
-                            types.InputMediaPhoto(media=databyte)
-                        )
-
-                    if len(media_group) == 10:
-                        self.__bot.send_media_group(
-                            chat_id=id,
-                            media=media_group
-                        )
-
-                if media_group:
-                    self.__bot.send_media_group(
-                            chat_id=id,
-                            media=media_group
-                        )
-
-                self.__bot.send_message(
-                    chat_id=id, text=f"Cursor Value for next media = {cursor_value}")
-            else:
-                self.__bot.send_message(
-                    chat_id=id, text=f"Your command is not correct.")
-                self.__bot.send_message(
-                    chat_id=id,
-                    text=(
-                        "Instructions for use:\n"
-                        "  - /allmedia screen_name=screenname count=20 cursor=abcdefghij\n"
-                        "  - /images screen_name=screenname count=20 cursor=abcdefghij\n"
-                        "  - /linkdownloader https://x.com/screenname/status/postid?s=20\n\n"
-                        "Explanation:\n"
-                        "  - screen_name (Required)\n"
-                        "  - count (Optional) Default = 20\n"
-                        "  - cursor (Optional) Used to retrieve the next media.\n"
-                    )
-                )
-
-        @self.__bot.message_handler(commands=["linkdownloader", "ld"])
-        def send_media_from_ld(message):
-            id = message.chat.id
-            param = ""
-
-            pattern = r'https://x\.com/[\w_]+/status/\d+\?s=20'
-
-            try:
-                param = message.text.split()[1]
-
-                if re.match(pattern=pattern, string=param):
-                    self.__bot.reply_to(
-                        message=message,
-                        text="Please wait...\nStill loading the media."
-                    )
-                    medias = self.linkdownloader(param)
+                    medias, cursor_value = self.allmedia(**parameters)
 
                     media_group = []
 
-                    for media in medias:
+                    for index, media in enumerate(medias):
+                        self.__loading(
+                            message=send_msg,
+                            chat_id=id,
+                            iterations=index
+                        )
+
                         data, filename, content_type = self.__download(media)
 
                         databyte = io.BytesIO(data)
@@ -253,8 +136,194 @@ class PyXDTelebot:
                             media=media_group
                         )
 
+                    if cursor_value:
+                        self.__bot.send_message(
+                            chat_id=id, text=f"Cursor Value for next media = {cursor_value}")
+                    else:
+                        self.__bot.send_message(
+                            chat_id=id, text="Done 😊")
+
+                except Exception:
                     self.__bot.send_message(
-                        chat_id=id, text="Media download is complete.")
+                        chat_id=id,
+                        text=f"Error! status code {self.__http_error_status_code} : {self.__http_error_reason}"
+                    )
+
+            else:
+                self.__bot.send_message(
+                    chat_id=id, text=f"Your command is not correct.")
+                self.__bot.send_message(
+                    chat_id=id,
+                    text=(
+                        "Instructions for use:\n"
+                        "  - /allmedia screen_name=screenname count=20 cursor=abcdefghij\n"
+                        "  - /images screen_name=screenname count=20 cursor=abcdefghij\n"
+                        "  - /linkdownloader https://x.com/screenname/status/postid?s=20\n\n"
+                        "Explanation:\n"
+                        "  - screen_name (Required)\n"
+                        "  - count (Optional) Default = 20\n"
+                        "  - cursor (Optional) Used to retrieve the next media.\n"
+                    )
+                )
+
+        @self.__bot.message_handler(commands=["images", "imgs"])
+        def send_images(message):
+            id = message.chat.id
+            parameters = dict()
+
+            for param in message.text.split():
+                if "=" in param:
+                    parameter = param.split("=")
+                    parameters.update({parameter[0]: parameter[1]})
+
+            if parameters:
+                self.__bot.send_message(
+                    chat_id=id,
+                    text="Please Wait...."
+                )
+
+                try:
+                    send_msg = self.__bot.send_message(
+                        chat_id=id,
+                        text="Loading"
+                    )
+
+                    medias, cursor_value = self.images(**parameters)
+
+                    media_group = []
+
+                    for index, media in enumerate(medias):
+                        self.__loading(
+                            message=send_msg,
+                            chat_id=id,
+                            iterations=index
+                        )
+
+                        data, filename, content_type = self.__download(media)
+
+                        databyte = io.BytesIO(data)
+                        databyte.name = filename
+
+                        if len(media_group) == 10:
+                            media_group.clear()
+
+                        if len(media_group) < 10:
+                            media_group.append(
+                                types.InputMediaPhoto(media=databyte)
+                            )
+
+                        if len(media_group) == 10:
+                            self.__bot.send_media_group(
+                                chat_id=id,
+                                media=media_group
+                            )
+
+                    if media_group:
+                        self.__bot.send_media_group(
+                            chat_id=id,
+                            media=media_group
+                        )
+
+                    if cursor_value:
+                        self.__bot.send_message(
+                            chat_id=id, text=f"Cursor Value for next media = {cursor_value}")
+                    else:
+                        self.__bot.send_message(
+                            chat_id=id, text="Done 😊")
+
+                except Exception:
+                    self.__bot.send_message(
+                        chat_id=id,
+                        text=f"Error! status code {self.__http_error_status_code} : {self.__http_error_reason}"
+                    )
+
+            else:
+                self.__bot.send_message(
+                    chat_id=id, text=f"Your command is not correct.")
+                self.__bot.send_message(
+                    chat_id=id,
+                    text=(
+                        "Instructions for use:\n"
+                        "  - /allmedia screen_name=screenname count=20 cursor=abcdefghij\n"
+                        "  - /images screen_name=screenname count=20 cursor=abcdefghij\n"
+                        "  - /linkdownloader https://x.com/screenname/status/postid?s=20\n\n"
+                        "Explanation:\n"
+                        "  - screen_name (Required)\n"
+                        "  - count (Optional) Default = 20\n"
+                        "  - cursor (Optional) Used to retrieve the next media.\n"
+                    )
+                )
+
+        @self.__bot.message_handler(commands=["linkdownloader", "ld"])
+        def send_media_from_ld(message):
+            id = message.chat.id
+            param = ""
+
+            pattern = r'https://x\.com/[\w_]+/status/\d+\?s=20'
+
+            try:
+                param = message.text.split()[1]
+
+                if re.match(pattern=pattern, string=param):
+                    send_msg = self.__bot.send_message(
+                        chat_id=id,
+                        text="Please Wait...."
+                    )
+
+                    try:
+                        medias = self.linkdownloader(param)
+
+                        media_group = []
+
+                        for i, media in enumerate(medias):
+                            if len(medias) > 1:
+                                self.__loading(
+                                    message=send_msg,
+                                    chat_id=id,
+                                    iterations=i
+                                )
+
+                            data, filename, content_type = self.__download(
+                                media
+                            )
+
+                            databyte = io.BytesIO(data)
+                            databyte.name = filename
+
+                            if len(media_group) == 10:
+                                media_group.clear()
+
+                            if len(media_group) < 10:
+                                if "image" in content_type:
+                                    media_group.append(
+                                        types.InputMediaPhoto(media=databyte)
+                                    )
+                                elif "video" in content_type:
+                                    media_group.append(
+                                        types.InputMediaVideo(media=databyte)
+                                    )
+
+                            if len(media_group) == 10:
+                                self.__bot.send_media_group(
+                                    chat_id=id,
+                                    media=media_group
+                                )
+
+                        if media_group:
+                            self.__bot.send_media_group(
+                                chat_id=id,
+                                media=media_group
+                            )
+
+                        self.__bot.send_message(
+                            chat_id=id, text="Media download is complete.")
+
+                    except Exception:
+                        self.__bot.send_message(
+                            chat_id=id,
+                            text=f"Error! status code {self.__http_error_status_code} : {self.__http_error_reason}"
+                        )
+
                 else:
                     self.__bot.send_message(
                         chat_id=id, text=f"Your command is not correct.")
@@ -288,6 +357,15 @@ class PyXDTelebot:
                         "  - cursor (Optional) Used to retrieve the next media.\n"
                     )
                 )
+
+    def __loading(self, message: str, chat_id: int | str, iterations: int):
+        loading_text = f"Loading {'⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'[iterations % 10]}"
+
+        self.__bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message.message_id,
+            text=loading_text
+        )
 
     def __csrftoken(self) -> str:
         self.__logger.info("Retrieves X-Csrf-Token from cookie.")
@@ -521,6 +599,9 @@ class PyXDTelebot:
 
             return data, filename, content_type
         else:
+            self.__http_error_status_code = resp.status_code
+            self.__http_error_reason = resp.reason
+
             self.__logger.error(
                 HTTPErrorException(
                     f"Error! status code {resp.status_code} : {resp.reason}"
@@ -699,6 +780,9 @@ class PyXDTelebot:
             )
             return medias, cursor_value
         else:
+            self.__http_error_status_code = resp.status_code
+            self.__http_error_reason = resp.reason
+
             self.__logger.error(
                 HTTPErrorException(
                     f"Error! status code {resp.status_code} : {resp.reason}"
@@ -828,6 +912,9 @@ class PyXDTelebot:
             )
             return medias, cursor_value
         else:
+            self.__http_error_status_code = resp.status_code
+            self.__http_error_reason = resp.reason
+
             self.__logger.error(
                 HTTPErrorException(
                     f"Error! status code {resp.status_code} : {resp.reason}"
@@ -909,6 +996,9 @@ class PyXDTelebot:
             )
             return medias
         else:
+            self.__http_error_status_code = resp.status_code
+            self.__http_error_reason = resp.reason
+
             self.__logger.error(
                 HTTPErrorException(
                     f"Error! status code {resp.status_code} : {resp.reason}"
