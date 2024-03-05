@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-from PyXDBot.xdownloader import PyXDTelebot
+# from PyXDBot.xdownloader import PyXDTelebot
 
 
-if __name__ == "__main__":
-    PXD = PyXDTelebot()
-    PXD.start_polling()
+# if __name__ == "__main__":
+#     PXD = PyXDTelebot()
+#     PXD.start_polling()
