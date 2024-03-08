@@ -1,7 +1,7 @@
 from requests import RequestException
 
 
-class PyXDownloaderException(Exception):
+class PyXDTelebotException(Exception):
     """Base exception for this script.
 
     :note: Pengecualian ini tidak boleh diajukan secara langsung.

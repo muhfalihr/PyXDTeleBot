@@ -1,11 +1,25 @@
+from typing import List, Dict, Any
 
 class Process:
+    '''
+    Media URL Retrieval Processor in the form of Images or Videos.
 
+    :> processmedia function
+    '''
     @staticmethod
-    def processmedia(tweet_results: list, feature: str):
-        medias: list = []
+    def processmedia(tweet_results: Dict[dict, any], feature: str) -> List[str]:
+        '''
+        Retrieve the image or video media URL with the best quality.
 
-        media_list: list = tweet_results.get("entities", {}).get("media", [])
+        Arguments :
+          - tweet_results (Dict[str, dict]): Tweet results containing media information.
+          - feature (str): The feature to process media for.
+        
+        ---
+        '''
+        medias: List[str] = []
+
+        media_list: List[str, any] = tweet_results.get("entities", {}).get("media", [])
 
         if media_list:
             for media in media_list:
@@ -37,11 +51,4 @@ class Process:
                         if media_type == "video":
                             videos: str = max(media.get("video_info", {}).get("variants", []), key=lambda x: x.get("bitrate", 0)).get("url", "")
                             medias.append(videos)
-
-        # else:
-        #     quoted_status_id_str = tweet_results.get(
-        #         "quoted_status_id_str", "")
-        #     medias = self.__tweetdetail(focalTweetId=quoted_status_id_str)
-        #     medias = medias if medias else []
-
         return medias
