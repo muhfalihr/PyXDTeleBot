@@ -1,10 +1,10 @@
 import re
 import json
-import logging
+import datetime
 
 from functools import wraps
 from PyXDBot.process import Process
-from typing import Any, Dict, List, ByteString
+from typing import Any, Dict, List, Pattern, Match
 from PyXDBot.exception import *
 from PyXDBot.logger import setup_logging
 
@@ -56,6 +56,38 @@ class Proccessor:
             data: Dict[Any] = json.loads(content.decode("utf-8"))
             result: Dict[Any] = data["data"]["user"]["result"]
             return result.get("rest_id")
+        return wrapper
+    
+    @staticmethod
+    def download(func):
+        """
+        download
+        """
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            resp, url = func(*args, **kwargs)
+
+            if ".jpg" in url:
+                pattern: Pattern[str] = re.compile(r'/([^/]+\.jpg)$')
+                matches: Match[str] | None = pattern.search(url)
+                if matches:
+                    filename: str | Any = matches.group(1)
+                    filename: str | Any = f"{filename}.jpg"
+                else:
+                    filename: str | Any = f"PYXD{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
+            else:
+                pattern: Pattern[str] = re.compile(r'/([^/]+)\.mp4')
+                matches: Match[str] = pattern.search(url)
+                if matches:
+                    filename: str | Any = matches.group(1)
+                    filename: str | Any = f"{filename}.mp4"
+                else:
+                    filename: str | Any = f"PYXD{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
+            
+            data: bytes = resp.content
+            content_type: str | None = resp.headers.get("Content-Type")
+
+            return data, filename, content_type
         return wrapper
     
     @staticmethod

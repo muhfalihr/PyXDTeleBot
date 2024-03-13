@@ -42,6 +42,8 @@ class PyXDTelebot:
         self.headers["Sec-Fetch-Site"] = "same-site"
         self.headers["Authorization"] = "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
         self.headers["Cookie"] = self.cookie
+        self.headers["User-Agent"] = self.fake.user_agent()
+        self.headers["X-Csrf-Token"] = Proccessor.csrftoken(cookie=self.cookie)
 
         self.http_error_status_code = None
         self.http_error_reason = None
@@ -62,7 +64,6 @@ class PyXDTelebot:
         '''
         self.logger.info(f"Retrieve rest_id from Twitter UserByScreenName API")
 
-        user_agent = self.fake.user_agent()
         payload = self.buildpayload.payload_UserByScreenName(**kwargs)
 
         for key in payload: payload.update({key: self.delws(json.dumps(payload[key]))})
@@ -70,9 +71,6 @@ class PyXDTelebot:
         payload_fragment = quote(payload["variables"]), quote(payload["features"]), quote(payload["fieldToggles"])
 
         url = f"https://api.twitter.com/graphql/NimuplG1OB7Fd2btCLdBOw/UserByScreenName?variables={payload_fragment[0]}&features={payload_fragment[1]}&fieldToggles={payload_fragment[2]}"
-
-        self.headers["User-Agent"] = user_agent
-        self.headers["X-Csrf-Token"] = Proccessor.csrftoken(cookie=self.cookie)
 
         self.logger.info("Make requests to the Twitter UserByScreenName API")
 
@@ -87,7 +85,8 @@ class PyXDTelebot:
 
         self.logger.info(f"The request has been successfully carried out and received a response of {status_code}: {resp.reason}")
         
-        if status_code == 200: return content
+        if status_code == 200:
+            return content
         else:
             self.http_error_status_code = resp.status_code
             self.http_error_reason = resp.reason
@@ -103,7 +102,6 @@ class PyXDTelebot:
         '''
         self.logger.info(f"Taking media URLs in the form of images or videos with the following feature provisions: {kwargs.get('features')}")
 
-        user_agent = self.fake.user_agent()
         features = kwargs.get("features")
 
         if features != "tweetdetail":
@@ -129,9 +127,6 @@ class PyXDTelebot:
 
             self.logger.info("Make requests to the Twitter TweetDetail API")
 
-        self.headers["User-Agent"] = user_agent
-        self.headers["X-Csrf-Token"] = Proccessor.csrftoken(cookie=self.cookie)
-
         resp = self.session.request(
             method="GET",
             url=url,
@@ -144,59 +139,36 @@ class PyXDTelebot:
         
         self.logger.info(f"The request has been successfully carried out and received a response of {status_code}: {resp.reason}")
 
-        if status_code == 200: return content, features
+        if status_code == 200:
+            return content, features
         else:
             self.http_error_status_code = resp.status_code
             self.http_error_reason = resp.reason
-            self.logger.error(
-                HTTPErrorException(f"Error! status code {resp.status_code} : {resp.reason}")
-            )
-
+            self.logger.error(HTTPErrorException(f"Error! status code {resp.status_code} : {resp.reason}"))
+    
+    @Proccessor.download
     def download(self, url: str) -> bytes | str:
         self.logger.info(f"Carry out the process to retrieve content, filename, and content_type in the download function.")
-
-        user_agent = self.fake.user_agent()
-        self.headers["User-Agent"] = user_agent
-
         self.logger.info("Make a request to the URL of the media from which the content will be retrieved using the GET method.")
-
+        
         resp = self.session.request(
             method="GET",
             url=url,
             timeout=480,
             headers=self.headers
         )
+
         status_code = resp.status_code
-        data = resp.content
+
+        self.logger.info(f"The request has been successfully carried out and received a response of {status_code}: {resp.reason}")
+        
         if status_code == 200:
-            if ".jpg" in url:
-                pattern = re.compile(r'/([^/]+\.jpg)$')
-                matches = pattern.search(url)
-                if matches:
-                    filename = matches.group(1)
-                    filename = f"{filename}.jpg"
-                else:
-                    filename = f"PYXD{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
-            else:
-                pattern = re.compile(r'/([^/]+)\.mp4')
-                matches = pattern.search(url)
-                if matches:
-                    filename = matches.group(1)
-                    filename = f"{filename}.mp4"
-                else:
-                    filename = f"PYXD{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
-            content_type = resp.headers.get("Content-Type")
-
-            self.logger.info("content, filename, and content type have been successfully obtained.")
-
-            return data, filename, content_type
+            return resp, url
         else:
             self.http_error_status_code = resp.status_code
             self.http_error_reason = resp.reason
 
-            self.logger.error(
-                HTTPErrorException(f"Error! status code {resp.status_code} : {resp.reason}")
-            )
+            self.logger.error(HTTPErrorException(f"Error! status code {resp.status_code} : {resp.reason}"))
 
 if __name__ == "__main__":
     sb = PyXDTelebot()
