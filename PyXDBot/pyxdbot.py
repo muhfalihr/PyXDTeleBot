@@ -1,23 +1,17 @@
-import io
 import os
 import re
 import json
 import logging
-import inspect
-import hashlib
-import asyncio
 
 from PyXDBot.exception import *
 from PyXDBot.logger import setup_logging
 from PyXDBot.utility import Proccessor
 from PyXDBot.payload import BuilderPayloads
 
-from datetime import datetime
 from requests.sessions import Session
-from telebot import types, async_telebot
 from urllib.parse import quote
 from faker import Faker
-from typing import Any, List, Tuple
+from typing import Any, List
 from dotenv import load_dotenv
 
 
@@ -29,8 +23,9 @@ class PyXDTelebot:
         The bot leverages the Twitter API to extract multimedia content from a user's post and swiftly deliver it automatically to users through the Telegram platform.
         '''
         load_dotenv()
-
         self.cookie = os.environ.get("X_COOKIE")
+
+        self.buildpayload = BuilderPayloads()
         self.session = Session()
         self.fake = Faker()
 
@@ -48,7 +43,6 @@ class PyXDTelebot:
         self.http_error_status_code = None
         self.http_error_reason = None
 
-        self.buildpayload = BuilderPayloads()
         self.delws = lambda text: re.sub(r'\s', '', text)
 
         setup_logging()

@@ -2,23 +2,27 @@ import re
 import json
 import datetime
 
-from functools import wraps
 from PyXDBot.process import Process
+
+from functools import wraps
 from typing import Any, Dict, List, Pattern, Match
-from PyXDBot.exception import *
-from PyXDBot.logger import setup_logging
 
 class Proccessor:
     def __init__(self) -> None:
         '''
         The core process of retrieving Media URLs and other important processes.
 
-        ---
+        - :mod:`csrftoken` : Retrieves X-Csrf-Token from cookie
+        - :mod:`payload` : Builder payload API X (Twitter)
+        - :mod:`rest_id_getter` : rest_id getter from API X (Twitter)
+        - :mod:`download` : Retrieving metadata from API X(Twitter) responses
+        - :mod:`media_getter` : Processing of retrieving media URLs from API X(Twitter) responses
         '''
+
     @staticmethod
     def csrftoken(cookie: str) -> str:
         """
-        Retrieves X-Csrf-Token from cookie
+        Retrieves X-Csrf-Token from cookie API X (Twitter)
         """
         pattern = re.compile(r'ct0=([a-zA-Z0-9_-]+)')
         matches = pattern.search(cookie)
@@ -31,7 +35,7 @@ class Proccessor:
     @staticmethod
     def payload(func):
         """
-        builder payload
+        Builder payload API X (Twitter)
         """
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -47,7 +51,7 @@ class Proccessor:
     @staticmethod
     def rest_id_getter(func):
         """
-        rest_id getter
+        rest_id getter from API X (Twitter)
         """
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -61,7 +65,7 @@ class Proccessor:
     @staticmethod
     def download(func):
         """
-        download
+        Retrieving metadata from API X(Twitter) responses
         """
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -93,7 +97,7 @@ class Proccessor:
     @staticmethod
     def media_getter(func):
         """
-        url media getter
+        Processing of retrieving media URLs from API X(Twitter) responses
         """
         @wraps(func)
         def wrapper(*args, **kwargs):

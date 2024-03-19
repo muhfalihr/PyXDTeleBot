@@ -1,21 +1,21 @@
 from typing import List, Dict, Any
 
 class Process:
-    '''
-    Media URL Retrieval Processor in the form of Images or Videos.
+    def __init__(self) -> None:
+        '''
+        Media URL Retrieval Processor in the form of Images or Videos.
 
-    :> processmedia function
-    '''
+        :mod:`processmedia function` : Retrieve the image or video media URL with the best quality.
+        '''
+
     @staticmethod
     def processmedia(tweet_results: Dict[dict, any], feature: str) -> List[str]:
         '''
         Retrieve the image or video media URL with the best quality.
 
         Arguments :
-          - tweet_results (Dict[str, dict]): Tweet results containing media information.
-          - feature (str): The feature to process media for.
-        
-        ---
+          - :mod:`tweet_results` (Dict[str, dict]) : Tweet results containing media information.
+          - :mod:`feature` (str) : The feature to process media for.
         '''
         medias: List[str] = []
 

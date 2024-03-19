@@ -4,7 +4,7 @@ from requests import RequestException
 class PyXDTelebotException(Exception):
     """Base exception for this script.
 
-    :note: Pengecualian ini tidak boleh diajukan secara langsung.
+    :note: This exception may not be applied for directly.
     """
     pass
 
